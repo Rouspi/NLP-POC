@@ -1,0 +1,6 @@
+{
+  "accuracy": 0.8316532258064516,
+  "model_type": "lightgbm",
+  "model_filename": "clf_lgb_bge.txt",
+  "embedding_model_name": "BAAI/bge-m3"
+}
