@@ -1,4 +1,5 @@
 .DS_Store
+notebook/.ipynb_checkpoints/
 artefacts/*
 !artefacts/best_model_meta.json
 !artefacts/clf_lgb_bge.txt
