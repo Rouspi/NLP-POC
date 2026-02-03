@@ -56,9 +56,16 @@ def render_accessible_header():
     st.markdown(
         """
         <style>
-        .app-title { font-size: 2.2rem; font-weight: 700; }
+        .app-title {
+            font-size: 2.0rem;
+            font-weight: 700;
+            line-height: 1.2;
+            white-space: normal;
+            word-break: break-word;
+        }
         .caption { font-size: 0.95rem; color: #333333; }
-        .block-container { padding-top: 1.5rem; }
+        .block-container { padding-top: 2.5rem; }
+        .app-title { margin-top: 0.25rem; }
         .stTextInput, .stTextArea { border: 1px solid #4f4f4f; }
         </style>
         """,
@@ -120,7 +127,7 @@ def render_eda(df):
     st.subheader("Nuage de mots")
     combined_text = " ".join(df["text"].astype(str).tolist())
     wc = WordCloud(width=900, height=450, background_color="white").generate(combined_text)
-    st.image(wc.to_array(), caption="WordCloud des textes", use_column_width=True)
+    st.image(wc.to_array(), caption="WordCloud des textes", width="stretch")
 
 
 def render_prediction(df):
@@ -129,11 +136,31 @@ def render_prediction(df):
         "Entrez un texte ou choisissez un exemple. Le modele renvoie une prediction de statut."
     )
 
-    example_ids = df["Unique_ID"].astype(str).tolist()
-    selected_id = st.selectbox("Choisir un exemple (optionnel)", [""] + example_ids)
+    preview_len = 80
+    sample_size = 40
+    statuses = df["status"].dropna().unique().tolist()
+    per_class = max(1, sample_size // max(len(statuses), 1))
+    remainder = sample_size % max(len(statuses), 1)
+    samples = []
+    for i, status in enumerate(statuses):
+        group = df[df["status"] == status]
+        n = min(len(group), per_class + (1 if i < remainder else 0))
+        if n > 0:
+            samples.append(group.sample(n=n, random_state=42))
+    if samples:
+        sampled = pd.concat(samples).sample(frac=1, random_state=42).reset_index(drop=True)
+    else:
+        sampled = df.sample(n=min(sample_size, len(df)), random_state=42).reset_index(drop=True)
+
+    example_texts = [""] + sampled["text"].astype(str).tolist()
+    selected_text = st.selectbox(
+        "Choisir un exemple (optionnel)",
+        example_texts,
+        format_func=lambda t: "" if t == "" else t[:preview_len].replace("\n", " "),
+    )
     default_text = ""
-    if selected_id:
-        default_text = df.loc[df["Unique_ID"].astype(str) == selected_id, "text"].values[0]
+    if selected_text:
+        default_text = selected_text
 
     user_text = st.text_area(
         "Texte a analyser",
