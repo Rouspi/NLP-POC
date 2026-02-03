@@ -12,7 +12,7 @@ streamlit run app/app.py
 
 ## Artefacts requis
 
-Le dashboard charge les fichiers suivants depuis `../models` :
+Le dashboard charge les fichiers suivants depuis `../artefacts` :
 
 - `best_model_meta.json`
 - `label_encoder.joblib`
@@ -25,5 +25,5 @@ Si ces fichiers manquent, recupere les outputs Kaggle puis relance l app.
 Apres execution du notebook Kaggle et sauvegarde de la version avec outputs :
 
 ```bash
-kaggle kernels output pierreschnoering/nlp-sant-mentale-baseline-sbert-vs-bge-m3 -p models -o
+kaggle kernels output pierreschnoering/nlp-sant-mentale-baseline-sbert-vs-bge-m3 -p artefacts -o
 ```

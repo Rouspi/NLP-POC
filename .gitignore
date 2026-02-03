@@ -1,5 +1,7 @@
 .DS_Store
-models/*
-!models/best_model_meta.json
-!models/clf_lgb_bge.txt
-!models/label_encoder.joblib
+artefacts/*
+!artefacts/best_model_meta.json
+!artefacts/clf_lgb_bge.txt
+!artefacts/label_encoder.joblib
+!artefacts/README.md
+!artefacts/README.txt

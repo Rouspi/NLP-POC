@@ -13,9 +13,9 @@ from wordcloud import WordCloud
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 DATA_PATH = BASE_DIR / "data" / "mental_heath_feature_engineered.csv"
-BEST_META_PATH = BASE_DIR / "models" / "best_model_meta.json"
-FALLBACK_MODEL_PATH = BASE_DIR / "models" / "clf_lgb_bge.txt"
-LABEL_ENCODER_PATH = BASE_DIR / "models" / "label_encoder.joblib"
+BEST_META_PATH = BASE_DIR / "artefacts" / "best_model_meta.json"
+FALLBACK_MODEL_PATH = BASE_DIR / "artefacts" / "clf_lgb_bge.txt"
+LABEL_ENCODER_PATH = BASE_DIR / "artefacts" / "label_encoder.joblib"
 FALLBACK_EMBEDDING_MODEL_NAME = "BAAI/bge-m3"
 
 
@@ -39,7 +39,7 @@ def load_artifacts():
         embedding_model_name = meta.get("embedding_model_name", embedding_model_name)
         model_filename = meta.get("model_filename")
         if model_filename:
-            model_path = BASE_DIR / "models" / model_filename
+            model_path = BASE_DIR / "artefacts" / model_filename
 
     embedder = SentenceTransformer(embedding_model_name)
     if model_type == "lightgbm":
