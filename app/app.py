@@ -80,57 +80,119 @@ def render_accessible_header():
     )
 
 
-def render_eda(df):
+
+
+def render_eda(df, accessibility_mode):
     st.subheader("Analyse exploratoire")
-    st.caption(
-        "Statistiques descriptives et graphiques interactifs. Palette couleur compatible daltonisme."
-    )
+    if accessibility_mode:
+        st.caption(
+            "Mode accessibilite actif: contraste renforce, symboles et tableau de valeurs sous les graphiques."
+        )
+    else:
+        st.caption(
+            "Statistiques descriptives et graphiques interactifs. Palette couleur compatible daltonisme."
+        )
 
     with st.expander("Statistiques descriptives"):
         st.dataframe(df.describe(include="all"), use_container_width=True)
 
-    col1, col2 = st.columns(2)
-    with col1:
-        status_counts = df["status"].value_counts().reset_index()
-        status_counts.columns = ["status", "count"]
-        fig_status = px.bar(
-            status_counts,
-            x="status",
-            y="count",
-            color="status",
-            color_discrete_sequence=px.colors.qualitative.Safe,
-            title="Distribution des statuts",
-        )
-        fig_status.update_layout(
-            xaxis_title="Statut",
-            yaxis_title="Nombre d'exemples",
-            legend_title_text="Statut",
-        )
-        st.plotly_chart(fig_status, use_container_width=True)
-        st.caption("Graphique a barres interactif. Lecture clavier et tooltips inclus.")
+    # Comptage des statuts pour le graphique principal
+    status_counts = df["status"].value_counts().reset_index()
+    status_counts.columns = ["status", "count"]
+    fig_status = px.bar(
+        status_counts,
+        x="status",
+        y="count",
+        color="status",
+        color_discrete_sequence=px.colors.qualitative.Safe,
+        title="Distribution des statuts",
+        pattern_shape="status" if accessibility_mode else None,
+    )
+    fig_status.update_layout(
+        xaxis_title="Statut",
+        yaxis_title="Nombre d'exemples",
+        legend_title_text="Statut",
+        height=520 if accessibility_mode else 440,
+    )
+    if accessibility_mode:
+        fig_status.update_traces(marker_line_width=1.2)
+    st.plotly_chart(fig_status, use_container_width=True)
+    st.caption("Graphique a barres interactif. Lecture clavier et tooltips inclus.")
+    if accessibility_mode:
+        st.dataframe(status_counts, use_container_width=True)
 
-    with col2:
-        fig_scatter = px.scatter(
-            df,
-            x="word_count",
-            y="text_length",
-            color="status",
-            color_discrete_sequence=px.colors.qualitative.Safe,
-            title="Longueur du texte vs nombre de mots",
-            hover_data=["text"],
-        )
-        fig_scatter.update_layout(
-            xaxis_title="Nombre de mots",
-            yaxis_title="Longueur normalisee du texte",
-            legend_title_text="Statut",
-        )
-        st.plotly_chart(fig_scatter, use_container_width=True)
-        st.caption("Nuage de points interactif. Les tooltips affichent le texte.")
+    # Mesure du taux de stresswords par statut
+    stress_flag = (
+        df["has_stress_keyword"]
+        .astype(str)
+        .str.strip()
+        .str.lower()
+        .isin({"true", "1", "yes"})
+    )
+    stress_stats = (
+        df.assign(has_stress_keyword=stress_flag)
+        .groupby("status")["has_stress_keyword"]
+        .agg(rate="mean", total="sum", count="count")
+        .reset_index()
+    )
+    stress_stats["rate_pct"] = (stress_stats["rate"] * 100).round(1)
+    fig_stress = px.bar(
+        stress_stats,
+        x="status",
+        y="total",
+        color="status",
+        color_discrete_sequence=px.colors.qualitative.Safe,
+        title="Nombre de textes avec stresswords par statut",
+        pattern_shape="status" if accessibility_mode else None,
+        text="total",
+    )
+    fig_stress.update_layout(
+        xaxis_title="Statut",
+        yaxis_title="Nombre de textes avec stresswords",
+        legend_title_text="Statut",
+        height=520 if accessibility_mode else 440,
+    )
+    if accessibility_mode:
+        fig_stress.update_traces(marker_line_width=1.2)
+    st.plotly_chart(fig_stress, use_container_width=True)
+    st.caption("Nombre de textes contenant un mot-cle de stress (feature engineering).")
+    if accessibility_mode:
+        st.dataframe(stress_stats, use_container_width=True)
+
+    fig_box = px.box(
+        df,
+        x="status",
+        y="word_count",
+        color="status",
+        color_discrete_sequence=px.colors.qualitative.Safe,
+        title="Distribution du nombre de mots par statut",
+        points="outliers",
+    )
+    fig_box.update_layout(
+        xaxis_title="Statut",
+        yaxis_title="Nombre de mots",
+        showlegend=False,
+        height=520 if accessibility_mode else 440,
+    )
+    if accessibility_mode:
+        fig_box.update_traces(marker_line_width=1.0)
+    st.plotly_chart(fig_box, use_container_width=True)
+    st.caption("Boite a moustaches: variabilite et outliers par statut.")
+    if accessibility_mode:
+        summary = df.groupby("status")[["word_count"]].describe().round(3)
+        summary = summary.reset_index()
+        st.dataframe(summary, use_container_width=True)
+
 
     st.subheader("Nuage de mots")
     combined_text = " ".join(df["text"].astype(str).tolist())
     wc = WordCloud(width=900, height=450, background_color="white").generate(combined_text)
     st.image(wc.to_array(), caption="WordCloud des textes", width="stretch")
+    if accessibility_mode:
+        st.caption(
+            "Alternative textuelle: le WordCloud est un complement visuel. "
+            "Voir les statistiques ci-dessus pour une lecture exacte."
+        )
 
 
 def render_prediction(df):
@@ -195,7 +257,8 @@ def render_prediction(df):
 def main():
     render_accessible_header()
     df = load_data()
-    render_eda(df)
+    accessibility_mode = st.toggle("Mode accessibilite (WCAG essentiels)", value=False)
+    render_eda(df, accessibility_mode)
     render_prediction(df)
 
 
