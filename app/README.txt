@@ -1,5 +1,8 @@
 Streamlit app
 
+Cette application est en ligne :
+https://nlp-poc.streamlit.app
+
 Demarrage (depuis la racine) :
   streamlit run app/app.py
 

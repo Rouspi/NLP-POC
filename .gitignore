@@ -6,3 +6,5 @@ artefacts/*
 !artefacts/label_encoder.joblib
 !artefacts/README.md
 !artefacts/README.txt
+POC-NLP_SCHNOERING_Pierre/
+POC-NLP_SCHNOERING_Pierre.zip
